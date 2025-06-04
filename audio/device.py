@@ -18,3 +18,9 @@ def get_input_devices():
             continue
         devices.append(info)
     return devices
+
+
+if __name__ == "__main__":
+    devices = get_input_devices()
+    for device in devices:
+        print("id: %d, name: %s" % (device["index"], device["name"]))

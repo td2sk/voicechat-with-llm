@@ -14,8 +14,10 @@ class Transcriber:
         device: str = "cpu",
         compute_type="int8",
         beam_size: int = 1,
+        language: str | None = "ja",
     ):
         self.beam_size = beam_size
+        self.language = language
         logger.info("start loadind whisper model: %s", model)
         with log_duration.info("finish loading whisper model"):
             self.model = WhisperModel(model, device, compute_type=compute_type)
@@ -23,7 +25,7 @@ class Transcriber:
     def transcribe(self, audio):
         segments, _ = self.model.transcribe(
             audio,
-            "ja",
+            self.language,
             beam_size=self.beam_size,
             without_timestamps=True,
         )

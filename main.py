@@ -101,6 +101,7 @@ def main():
     parser.add_argument("--whisper-device", type=str)
     parser.add_argument("--whisper-type", type=str, default="int8")
     parser.add_argument("--whisper-beam-size", type=int, default=1)
+    parser.add_argument("--whisper-language", type=str)
     parser.add_argument("--vad-mode", type=int, default=3)
     parser.add_argument("--audio-device-id", type=int, default=0)
     args = parser.parse_args()
@@ -134,6 +135,7 @@ def main():
         args.whisper_device,
         args.whisper_type,
         args.whisper_beam_size,
+        args.whisper_language,
     )
 
     threading.Thread(
@@ -170,7 +172,7 @@ def main():
 
     try:
         while True:
-            key = input("キー入力で終了します...\n")
+            key = input("話しかけてください。キー入力で終了します...\n")
             if not key:
                 break
     except KeyboardInterrupt:

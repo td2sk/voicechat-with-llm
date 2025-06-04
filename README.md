@@ -40,13 +40,22 @@ uv sync
 ## 実行方法
 
 ```sh
-python main.py \
-  --system-prompt-path system.md \
-  --schema-path schema.json \
-  --ollama-host http://localhost:11434 \
-  --ollama-model <モデル名> \
-  --whisper-model <whisperモデル名> \
-  --audio-device-id <マイクデバイスID>
+# 入力オーディオデバイスIDの確認
+uv run ./audio/device.py
+
+# 実行
+ uv run main.py \
+   --schema-path ./examples/schema.json \
+   --system-prompt-path ./examples/system_prompt.txt \
+   --ollama-host localhost:11434 \
+   --whisper-model turbo \
+   --whisper-device cuda \
+   --whisper-type int8 \
+   --whisper-beam-size 1 \
+   --whisper-language ja \
+   --ollama-model qwen3:32b \
+   --vad-mode 3 \
+   --audio-device-id 0 # 確認したオーディオデバイスID
 ```
 
 - `--system-prompt-path` : LLM に指示するシステムプロンプトファイルのパス
@@ -57,6 +66,7 @@ python main.py \
 - `--whisper-device` : Whisper の動作環境。cpu or cuda
 - `--whisper-type` : Whisper の精度 (デフォルト値: int8)
 - `--whisper-beam-size` : Whisper の検索サイズ (デフォルト値: 1)
+- `--whisper-language` : Whisper の聞き取る言語 (デフォルト値: None (自動推定))
 - `--vad-mode` : 無音検出の感度。0~ 3 で指定。大きいほど無音判定されやすい (デフォルト値: 3)
 - `--audio-device-id` : マイクデバイス ID (デフォルト値: 0)
 
@@ -78,11 +88,29 @@ python main.py \
 
 現在の実装には以下の前提があります (改修予定)
 
+- 音声は四国めたん前提
+  - main.py 内で同キャラクターの ID を決め打ちしているため
 - LLM の出力は `examples/schema.json` のスキーマに従うこと
   - main.py の音声出力部分で、LLM からのレスポンスがこのスキーマである前提のコードとなっているため
   - --schema-path オプションで Structured Outputs 機能により出力をこの書式に制限できますが、別途システムプロンプトでも json で出力するよう指示することを推奨します
-- 音声は四国めたん前提
-  - main.py 内で同キャラクターの ID を決め打ちしているため
+
+LLM からの応答例
+
+```jsonc
+{
+  // 返答内容
+  "content": "うーん、今日はカレーライスにするかな～。辛さは少なめで。",
+  // VOICEVOX のスタイル(喋り方)
+  "tone": "普通"
+}
+```
+
+```json
+{
+  "content": "う、少しだけ辛いのもいいけど、今日は胃がちょっと弱いんだよ…。",
+  "tone": "ツンツン"
+}
+```
 
 ## ライセンス
 

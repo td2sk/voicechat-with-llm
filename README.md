@@ -62,6 +62,7 @@ uv run ./audio/device.py
 - `--schema-path` : LLM レスポンスのスキーマファイルのパス
 - `--ollama-host` : Ollama サーバーの URL (デフォルト値: 127.0.0.1:11434)
 - `--ollama-model` : 使用する LLM モデル名
+- `--voicevox-endpoint` : VOICEVOX の接続先 (デフォルト値: http://127.0.0.1:50021)
 - `--whisper-model` : Whisper モデル名 (デフォルト値: turbo)
 - `--whisper-device` : Whisper の動作環境。cpu or cuda
 - `--whisper-type` : Whisper の精度 (デフォルト値: int8)

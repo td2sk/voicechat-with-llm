@@ -97,6 +97,9 @@ def main():
     parser.add_argument("--schema-path", type=str)
     parser.add_argument("--ollama-host", type=str, default="127.0.0.1:11434")
     parser.add_argument("--ollama-model", type=str)
+    parser.add_argument(
+        "--voicevox-endpoint", type=str, default="http://127.0.0.1:50021"
+    )
     parser.add_argument("--whisper-model", type=str, default="turbo")
     parser.add_argument("--whisper-device", type=str)
     parser.add_argument("--whisper-type", type=str, default="int8")
@@ -128,7 +131,7 @@ def main():
         model=args.ollama_model, host=ollama_host, system=system_prompt, schema=schema
     )
 
-    voicevox = VOICEVOX()
+    voicevox = VOICEVOX(args.voicevox_endpoint)
 
     transcriber = Transcriber(
         args.whisper_model,

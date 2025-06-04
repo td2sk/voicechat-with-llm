@@ -1,0 +1,21 @@
+[project]
+name = "chat"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "faster-whisper>=1.1.1",
+    "numpy>=2.2.6",
+    "ollama>=0.5.1",
+    "pyaudio>=0.2.14",
+    "requests>=2.32.3",
+    "webrtcvad-wheels>=2.0.14",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "ipython>=9.3.0",
+    "isort>=6.0.1",
+]

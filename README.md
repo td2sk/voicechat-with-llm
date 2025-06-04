@@ -1,0 +1,93 @@
+# LLM VoiceChat
+
+## 概要
+
+このプロジェクトは、音声認識・音声合成・大規模言語モデル(LLM)を組み合わせた日本語音声対話システムです。リアルタイムで音声入力を認識し、LLM で応答を生成し、音声で返答します。
+
+## 主な機能
+
+- 音声認識 (Whisper)
+- 音声合成 (VOICEVOX)
+- LLM による対話 (Ollama)
+- VAD(Voice Activity Detection)による自動音声検出
+- マルチスレッドによるリアルタイム処理
+
+## 必要環境
+
+- Python 3.8 以降
+- Windows (他 OS は未検証)
+- Ollama
+- VOICEVOX
+- 必要な Python パッケージは`pyproject.toml`参照
+
+## セットアップ
+
+1. 必要なパッケージを[uv](https://github.com/astral-sh/uv)でインストール:
+
+```sh
+uv sync
+```
+
+2. `system.md` (システムプロンプト)と `schema.json` (スキーマ定義)を用意してください。
+
+- サンプルとして `examples/system-prompt.txt`, `examples/schema.json` を用意しています
+
+3. VOICEVOX エンジンが必要です。ローカルまたは API で利用できるようにしてください。
+4. Ollama サーバーを起動し、利用したいモデルをダウンロードしてください。
+
+※ 後述の制限により現在の実装ではスキーマは `examples/schema.json` を使うことが前提となります
+
+## 実行方法
+
+```sh
+python main.py \
+  --system-prompt-path system.md \
+  --schema-path schema.json \
+  --ollama-host http://localhost:11434 \
+  --ollama-model <モデル名> \
+  --whisper-model <whisperモデル名> \
+  --audio-device-id <マイクデバイスID>
+```
+
+- `--system-prompt-path` : LLM に指示するシステムプロンプトファイルのパス
+- `--schema-path` : LLM レスポンスのスキーマファイルのパス
+- `--ollama-host` : Ollama サーバーの URL (デフォルト値: http://localhost:11434)
+- `--ollama-model` : 使用する LLM モデル名
+- `--whisper-model` : Whisper モデル名 (デフォルト値: turbo)
+- `--whisper-device` : Whisper の動作環境。cpu or cuda
+- `--whisper-type` : Whisper の精度 (デフォルト値: int8)
+- `--whisper-beam-size` : Whisper の検索サイズ (デフォルト値: 1)
+- `--vad-mode` : 無音検出の感度。0~ 3 で指定。大きいほど無音判定されやすい (デフォルト値: 3)
+- `--audio-device-id` : マイクデバイス ID (デフォルト値: 0)
+
+## ファイル構成
+
+- `main.py` : メインスクリプト
+- `audio/` : 音声入出力・VAD・認識関連
+- `llm/` : LLM クライアント
+- `voice/` : VOICEVOX 連携
+- `utils/` : 補助ユーティリティ
+- `examples/` : サンプルのシステムプロンプト
+
+## 注意事項
+
+- VOICEVOX エンジンや Ollama サーバーは別途起動が必要です
+- 音声デバイス ID は環境により異なります
+
+## 実装上の制約
+
+現在の実装には以下の前提があります (改修予定)
+
+- LLM の出力は `examples/schema.json` のスキーマに従うこと
+  - main.py の音声出力部分で、LLM からのレスポンスがこのスキーマである前提のコードとなっているため
+  - --schema-path オプションで Structured Outputs 機能により出力をこの書式に制限できますが、別途システムプロンプトでも json で出力するよう指示することを推奨します
+- 音声は四国めたん前提
+  - main.py 内で同キャラクターの ID を決め打ちしているため
+
+## ライセンス
+
+MIT License
+
+## 参考
+
+[「WebRTC VAD」を試す - Zenn](https://zenn.dev/kun432/scraps/ec4666f467832c)

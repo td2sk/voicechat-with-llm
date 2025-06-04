@@ -10,7 +10,7 @@ class VOICEVOX:
         self.endpoint = endpoint
 
     def audio_query(self, speaker: int, text: str) -> bytes:
-        logger.debug(f"call /audio_query, speaker={speaker}, text={text}")
+        logger.debug("call /audio_query, speaker=%d, text=%s" % (speaker, text))
         response = requests.post(
             self.endpoint + "/audio_query",
             params={
@@ -20,19 +20,19 @@ class VOICEVOX:
         )
 
         if response.status_code != 200:
-            logger.error(f"failed to create query: {response.content}")
+            logger.error("failed to create query: %s", response.content)
             raise Exception("failed to create query", response.content)
 
         return response.content
 
     def synthesis(self, speaker: int, query: bytes):
-        logger.debug(f"call /synthesis, speaker={speaker}")
+        logger.debug("call /synthesis, speaker=%d", speaker)
         response = requests.post(
             self.endpoint + "/synthesis", params={"speaker": speaker}, data=query
         )
 
         if response.status_code != 200:
-            logger.error(f"failed to create query: {response.content}")
+            logger.error("failed to create query: %s", response.content)
             raise Exception("failed to create query", response.content)
 
         return response.content

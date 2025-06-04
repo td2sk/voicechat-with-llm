@@ -95,7 +95,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--system-prompt-path", type=str)
     parser.add_argument("--schema-path", type=str)
-    parser.add_argument("--ollama-host", type=str)
+    parser.add_argument("--ollama-host", type=str, default="127.0.0.1:11434")
     parser.add_argument("--ollama-model", type=str)
     parser.add_argument("--whisper-model", type=str, default="turbo")
     parser.add_argument("--whisper-device", type=str)

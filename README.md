@@ -47,7 +47,7 @@ uv run ./audio/device.py
  uv run main.py \
    --schema-path ./examples/schema.json \
    --system-prompt-path ./examples/system_prompt.txt \
-   --ollama-host localhost:11434 \
+   --ollama-host 127.0.0.1:11434 \
    --whisper-model turbo \
    --whisper-device cuda \
    --whisper-type int8 \
@@ -60,7 +60,7 @@ uv run ./audio/device.py
 
 - `--system-prompt-path` : LLM に指示するシステムプロンプトファイルのパス
 - `--schema-path` : LLM レスポンスのスキーマファイルのパス
-- `--ollama-host` : Ollama サーバーの URL (デフォルト値: http://localhost:11434)
+- `--ollama-host` : Ollama サーバーの URL (デフォルト値: 127.0.0.1:11434)
 - `--ollama-model` : 使用する LLM モデル名
 - `--whisper-model` : Whisper モデル名 (デフォルト値: turbo)
 - `--whisper-device` : Whisper の動作環境。cpu or cuda
@@ -114,9 +114,6 @@ LLM からの応答例
 
 ## TODO
 
-- [ ] 応答速度の改善
-  - 現状では GPU 動作で 5.5 秒、CPU 動作で 16 秒ほどかかる
-  - GPU 動作では大部分の処理時間を音声生成処理が占める。VOICEVOX 以外の利用も検討
 - [ ] 対応音声を選択可能にする
   - 現状は四国めたん決め打ち
 

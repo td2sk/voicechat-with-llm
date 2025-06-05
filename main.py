@@ -27,22 +27,17 @@ def run_chat(client: chat.Client, message_queue: Queue[str], talk_queue: Queue):
         talk_queue.put(content)
 
 
-# TODO 四国めたん前提となっている
-TONE_MAP = {
-    "普通": 2,
-    "あまあま": 0,
-    "ツンツン": 6,
-    "セクシー": 4,
-    "ささやき": 36,
-    "ヒソヒソ": 37,
-}
-
-
-def run_voice(voicevox: VOICEVOX, talk_queue: Queue, mute_queue: Queue):
+def run_voice(voicevox: VOICEVOX, styles, talk_queue: Queue, mute_queue: Queue):
     while True:
         content = talk_queue.get()
         tone = content["tone"]
-        speaker = TONE_MAP[tone]
+
+        speaker = next((style["id"] for style in styles if style["name"] == tone), None)
+        if speaker is None:
+            logger.warning(
+                "unknown tone: %s. use %s instead", (tone, styles[0]["name"])
+            )
+            speaker = styles[0]["id"]
         with log_duration.info("audio_query"):
             query = voicevox.audio_query(speaker, content["content"])
         with log_duration.info("synthesis"):
@@ -93,15 +88,15 @@ def main():
     getLogger("faster_whisper").setLevel(WARN)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--system-prompt-path", type=str)
-    parser.add_argument("--schema-path", type=str)
+    parser.add_argument("--system-prompt-path", type=str, required=True)
     parser.add_argument("--ollama-host", type=str, default="127.0.0.1:11434")
-    parser.add_argument("--ollama-model", type=str)
+    parser.add_argument("--ollama-model", type=str, required=True)
     parser.add_argument(
         "--voicevox-endpoint", type=str, default="http://127.0.0.1:50021"
     )
+    parser.add_argument("--voicevox-character", type=str, default="四国めたん")
     parser.add_argument("--whisper-model", type=str, default="turbo")
-    parser.add_argument("--whisper-device", type=str)
+    parser.add_argument("--whisper-device", type=str, required=True)
     parser.add_argument("--whisper-type", type=str, default="int8")
     parser.add_argument("--whisper-beam-size", type=int, default=1)
     parser.add_argument("--whisper-language", type=str)
@@ -121,17 +116,55 @@ def main():
     voice_queue: Queue = Queue()
     mute_queue: Queue = Queue()
 
-    with open(args.schema_path, "rb") as f:
-        schema = json.load(f)
+    voicevox = VOICEVOX(args.voicevox_endpoint)
+    speakers: list = json.loads(voicevox.speakers())
+
+    cv = next((r for r in speakers if r["name"] == args.voicevox_character), None)
+    if cv is None:
+        logger.error("character not found: %s", args.voicevox_character)
+        return
+    logger.info("character voice: %s", cv["name"])
+    styles = cv["styles"]
+
+    llm_response_schema = {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+            "content": {"type": "string"},
+            "tone": {
+                "type": "string",
+                "enum": list(style["name"] for style in styles),
+            },
+        },
+        "required": ["content", "tone"],
+        "additionalProperties": False,
+    }
 
     with open(args.system_prompt_path, "r", encoding="utf-8") as f:
         system_prompt = f.read()
+        system_prompt = system_prompt.replace(
+            "{%DEFAULT_OUTPUT_FORMAT}",
+            """- json 形式で出力してください
+- content 属性には、会話の内容を指定してください
+- ユーザー側のセリフやナレーションは書かないでください
+- tone 属性では、あなたの話のトーン、感情を指定します。返事の内容に沿って以下の中から選んでください
+{%VOICEVOX_TONES}
+""",
+        )
+        system_prompt = system_prompt.replace(
+            "{%VOICEVOX_CHARACTER}", args.voicevox_character
+        )
+        system_prompt = system_prompt.replace(
+            "{%VOICEVOX_TONES}", "\n".join(f"  - {style["name"]}" for style in styles)
+        )
+        logger.info("prompt:\n%s", system_prompt)
 
     client = chat.Client(
-        model=args.ollama_model, host=ollama_host, system=system_prompt, schema=schema
+        model=args.ollama_model,
+        host=ollama_host,
+        system=system_prompt,
+        schema=llm_response_schema,
     )
-
-    voicevox = VOICEVOX(args.voicevox_endpoint)
 
     transcriber = Transcriber(
         args.whisper_model,
@@ -150,7 +183,7 @@ def main():
     threading.Thread(
         target=run_voice,
         daemon=True,
-        args=(voicevox, voice_queue, mute_queue),
+        args=(voicevox, styles, voice_queue, mute_queue),
     ).start()
 
     threading.Thread(

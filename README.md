@@ -45,7 +45,6 @@ uv run ./audio/device.py
 
 # 実行
  uv run main.py \
-   --schema-path ./examples/schema.json \
    --system-prompt-path ./examples/system_prompt.txt \
    --ollama-host 127.0.0.1:11434 \
    --whisper-model turbo \
@@ -55,14 +54,15 @@ uv run ./audio/device.py
    --whisper-language ja \
    --ollama-model qwen3:32b \
    --vad-mode 3 \
+   --voicevox-character ずんだもん \
    --audio-device-id 0 # 確認したオーディオデバイスID
 ```
 
 - `--system-prompt-path` : LLM に指示するシステムプロンプトファイルのパス
-- `--schema-path` : LLM レスポンスのスキーマファイルのパス
 - `--ollama-host` : Ollama サーバーの URL (デフォルト値: 127.0.0.1:11434)
 - `--ollama-model` : 使用する LLM モデル名
 - `--voicevox-endpoint` : VOICEVOX の接続先 (デフォルト値: http://127.0.0.1:50021)
+- `--voicevox-character` : VOICEVOX で利用するキャラクター (デフォルト値: 四国めたん)
 - `--whisper-model` : Whisper モデル名 (デフォルト値: turbo)
 - `--whisper-device` : Whisper の動作環境。cpu or cuda
 - `--whisper-type` : Whisper の精度 (デフォルト値: int8)
@@ -83,17 +83,21 @@ uv run ./audio/device.py
 ## 注意事項
 
 - VOICEVOX エンジンや Ollama サーバーは別途起動が必要です
-- 音声デバイス ID は環境により異なります
 
-## 実装上の制約
+## システムプロンプト
 
-現在の実装には以下の前提があります (改修予定)
+キャラクター設定をシステムプロンプトとしてファイルに記述して --system-prompt-path で指定してください。
+`examples/system_prompt.txt` に記述例があります。
 
-- 音声は四国めたん前提
-  - main.py 内で同キャラクターの ID を決め打ちしているため
-- LLM の出力は `examples/schema.json` のスキーマに従うこと
-  - main.py の音声出力部分で、LLM からのレスポンスがこのスキーマである前提のコードとなっているため
-  - --schema-path オプションで Structured Outputs 機能により出力をこの書式に制限できますが、別途システムプロンプトでも json で出力するよう指示することを推奨します
+設定内では以下の変数が利用できます。
+
+- `{%DEFAULT_OUTPUT_FORMAT}`: LLM に対する出力フォーマット指定 (後述)
+- `{%VOICEVOX_CHARACTER}`: --voicevox-character で指定したキャラクター名
+- `{%VOICEVOX_TONES}`: --voicevox-character で指定したキャラクター名で使える声のスタイルのリスト
+
+### 出力フォーマット指定
+
+本システムでは、LLM からの応答が特定のフォーマットになることを前提としています。
 
 LLM からの応答例
 
@@ -113,10 +117,19 @@ LLM からの応答例
 }
 ```
 
-## TODO
+そのため、フォーマット指定をかならずプロンプト内に記載してください。
 
-- [ ] 対応音声を選択可能にする
-  - 現状は四国めたん決め打ち
+フォーマットについてカスタマイズが不要な場合は変数 {%DEFAULT_OUTPUT_FORMAT} をプロンプト内に含めてください。以下のように置換されます。
+
+```markdown
+- json 形式で出力してください
+- content 属性には、会話の内容を指定してください
+- ユーザー側のセリフやナレーションは書かないでください
+- tone 属性では、あなたの話のトーン、感情を指定します。返事の内容に沿って以下の中から選んでください
+{%VOICEVOX_TONES}
+```
+
+※ Structured Output 機能により出力をコントロールしてはいますが、明示的に指示したほうが回答が安定します。
 
 ## ライセンス
 

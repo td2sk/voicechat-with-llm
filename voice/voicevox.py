@@ -37,6 +37,16 @@ class VOICEVOX:
 
         return response.content
 
+    def speakers(self):
+        logger.debug("call /speakers")
+        response = requests.get(self.endpoint + "/speakers")
+
+        if response.status_code != 200:
+            logger.error("failed to get speakers: %s", response.content)
+            raise Exception("failed to get speakers", response.content)
+
+        return response.content
+
 
 if __name__ == "__main__":
     import logging

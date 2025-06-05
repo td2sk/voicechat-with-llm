@@ -32,8 +32,8 @@ class VOICEVOX:
         )
 
         if response.status_code != 200:
-            logger.error("failed to create query: %s", response.content)
-            raise Exception("failed to create query", response.content)
+            logger.error("failed to synthesis: %s", response.content)
+            raise Exception("failed to synthesis", response.content)
 
         return response.content
 

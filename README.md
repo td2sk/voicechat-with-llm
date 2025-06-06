@@ -28,14 +28,12 @@
 uv sync
 ```
 
-2. `system.md` (システムプロンプト)と `schema.json` (スキーマ定義)を用意してください。
+2. キャラクター設定(システムプロンプト)をテキストファイルで用意してください。
 
-- サンプルとして `examples/system-prompt.txt`, `examples/schema.json` を用意しています
+-　利用可能なサンプルとして `examples/system-prompt.txt` があります
 
 3. VOICEVOX エンジンが必要です。ローカルまたは API で利用できるようにしてください。
 4. Ollama サーバーを起動し、利用したいモデルをダウンロードしてください。
-
-※ 後述の制限により現在の実装ではスキーマは `examples/schema.json` を使うことが前提となります
 
 ## 実行方法
 

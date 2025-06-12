@@ -9,7 +9,7 @@ import pyaudio
 import utils.log_duration as log_duration
 from audio.play import play_wav
 from audio.stream import AudioStream
-from audio.transcribe import Transcriber
+from audio.transcribe.base import BaseTranscriber
 from audio.vad import Vad
 from llm import chat
 from voice.voicevox import VOICEVOX
@@ -64,18 +64,16 @@ def vad(vad_mode: int, device_id: int, audio_queue: Queue[np.typing.NDArray]):
 
 
 def transcribe(
-    transcriber: Transcriber,
+    transcriber: BaseTranscriber,
     audio_queue: Queue[np.typing.NDArray],
     message_queue: Queue[str],
 ):
     while True:
         audio = audio_queue.get()
         with log_duration.info("transcribe time"):
-            segments = transcriber.transcribe(audio)
-            segments = list(segments)
-        for segment in segments:
-            logger.info("transcribed: %s", segment.text)
-            message_queue.put(segment.text)
+            text = transcriber.transcribe(audio)
+        logger.info("transcribed: %s", text)
+        message_queue.put(text)
 
 
 def main():
@@ -97,13 +95,19 @@ def main():
         "--voicevox-endpoint", type=str, default="http://127.0.0.1:50021"
     )
     parser.add_argument("--voicevox-character", type=str, default="四国めたん")
-    parser.add_argument("--whisper-model", type=str, default="turbo")
-    parser.add_argument("--whisper-device", type=str, required=True)
-    parser.add_argument("--whisper-type", type=str, default="int8")
-    parser.add_argument("--whisper-beam-size", type=int, default=1)
-    parser.add_argument("--whisper-language", type=str)
     parser.add_argument("--vad-mode", type=int, default=3)
     parser.add_argument("--audio-device-id", type=int, default=0)
+    parser.add_argument("--whisper-mode", choices=["local", "remote"], default="local")
+    remote_parser = parser.add_argument_group("whisper-mode-remote")
+    remote_parser.add_argument(
+        "--whisper-endpoint", type=str, default="http://127.0.0.1:8000"
+    )
+    local_parser = parser.add_argument_group("whisper-mode-local")
+    local_parser.add_argument("--whisper-model", type=str, default="turbo")
+    local_parser.add_argument("--whisper-device", type=str)
+    local_parser.add_argument("--whisper-type", type=str, default="int8")
+    local_parser.add_argument("--whisper-beam-size", type=int, default=1)
+    local_parser.add_argument("--whisper-language", type=str)
     args = parser.parse_args()
 
     ollama_host = None
@@ -169,13 +173,20 @@ def main():
         schema=llm_response_schema,
     )
 
-    transcriber = Transcriber(
-        args.whisper_model,
-        args.whisper_device,
-        args.whisper_type,
-        args.whisper_beam_size,
-        args.whisper_language,
-    )
+    if args.whisper_mode == "remote":
+        from audio.transcribe.remote import RemoteTranscriber
+
+        transcriber = RemoteTranscriber(args.whisper_endpoint)
+    else:
+        from audio.transcribe.local import LocalTranscriber
+
+        transcriber = LocalTranscriber(
+            args.whisper_model,
+            args.whisper_device,
+            args.whisper_type,
+            args.whisper_beam_size,
+            args.whisper_language,
+        )
 
     threading.Thread(
         target=run_chat,

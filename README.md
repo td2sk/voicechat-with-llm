@@ -61,13 +61,17 @@ uv run ./audio/device.py
 - `--ollama-model` : 使用する LLM モデル名
 - `--voicevox-endpoint` : VOICEVOX の接続先 (デフォルト値: http://127.0.0.1:50021)
 - `--voicevox-character` : VOICEVOX で利用するキャラクター (デフォルト値: 四国めたん)
-- `--whisper-model` : Whisper モデル名 (デフォルト値: turbo)
-- `--whisper-device` : Whisper の動作環境。cpu or cuda
-- `--whisper-type` : Whisper の精度 (デフォルト値: int8)
-- `--whisper-beam-size` : Whisper の検索サイズ (デフォルト値: 1)
-- `--whisper-language` : Whisper の聞き取る言語 (デフォルト値: None (自動推定))
 - `--vad-mode` : 無音検出の感度。0~ 3 で指定。大きいほど無音判定されやすい (デフォルト値: 3)
 - `--audio-device-id` : マイクデバイス ID (デフォルト値: 0)
+- `--whisper-mode` : Whisper の動作環境。local か remote で指定 (デフォルト値: local)
+  - local の場合
+    - `--whisper-model` : Whisper モデル名 (デフォルト値: turbo)
+    - `--whisper-device` : Whisper の動作環境。cpu or cuda
+    - `--whisper-type` : Whisper の精度 (デフォルト値: int8)
+    - `--whisper-beam-size` : Whisper の検索サイズ (デフォルト値: 1)
+    - `--whisper-language` : Whisper の聞き取る言語 (デフォルト値: None (自動推定))
+  - remote の場合
+    - `--whisper-endpoint` : Whisper の接続先 (デフォルト値: http://127.0.0.1:8000)
 
 ## ファイル構成
 

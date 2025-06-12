@@ -106,8 +106,8 @@ def main():
     local_parser.add_argument("--whisper-model", type=str, default="turbo")
     local_parser.add_argument("--whisper-device", type=str)
     local_parser.add_argument("--whisper-type", type=str, default="int8")
-    local_parser.add_argument("--whisper-beam-size", type=int, default=1)
-    local_parser.add_argument("--whisper-language", type=str)
+    parser.add_argument("--whisper-beam-size", type=int, default=1)
+    parser.add_argument("--whisper-language", type=str)
     args = parser.parse_args()
 
     ollama_host = None
@@ -176,7 +176,11 @@ def main():
     if args.whisper_mode == "remote":
         from audio.transcribe.remote import RemoteTranscriber
 
-        transcriber = RemoteTranscriber(args.whisper_endpoint)
+        transcriber = RemoteTranscriber(
+            args.whisper_endpoint,
+            args.whisper_beam_size,
+            args.whisper_language,
+        )
     else:
         from audio.transcribe.local import LocalTranscriber
 

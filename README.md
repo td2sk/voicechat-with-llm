@@ -68,10 +68,11 @@ uv run ./audio/device.py
     - `--whisper-model` : Whisper モデル名 (デフォルト値: turbo)
     - `--whisper-device` : Whisper の動作環境。cpu or cuda
     - `--whisper-type` : Whisper の精度 (デフォルト値: int8)
-    - `--whisper-beam-size` : Whisper の検索サイズ (デフォルト値: 1)
-    - `--whisper-language` : Whisper の聞き取る言語 (デフォルト値: None (自動推定))
   - remote の場合
     - `--whisper-endpoint` : Whisper の接続先 (デフォルト値: http://127.0.0.1:8000)
+  - 共通オプション
+    - `--whisper-beam-size` : Whisper の検索サイズ (デフォルト値: 1)
+    - `--whisper-language` : Whisper の聞き取る言語 (デフォルト値: None (自動推定))
 
 ## ファイル構成
 

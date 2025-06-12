@@ -10,7 +10,7 @@ class AudioStream:
     def __init__(
         self,
         device_index: int,
-        callback: Callable[[tuple[bytes, int, dict, int]], tuple[bytes, int]],
+        callback: Callable[[bytes, int, dict, int], tuple[bytes, int]],
         rate: int = 16000,
         chunk: int = 480,
     ):

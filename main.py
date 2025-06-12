@@ -23,6 +23,8 @@ def run_chat(client: chat.Client, message_queue: Queue[str], talk_queue: Queue):
         with log_duration.info("llm chat"):
             response = client.chat(text)
         logger.info("LLM: %s", response.message.content)
+        if response.message.content is None:
+            continue
         content = json.loads(response.message.content)
         talk_queue.put(content)
 
@@ -104,6 +106,7 @@ def main():
     parser.add_argument("--audio-device-id", type=int, default=0)
     args = parser.parse_args()
 
+    ollama_host = None
     if args.ollama_host:
         ollama_host = args.ollama_host
     else:

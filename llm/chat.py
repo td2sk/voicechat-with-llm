@@ -9,9 +9,9 @@ class Client:
     def __init__(
         self,
         model: str,
-        host: str,
+        host: str | None,
         system: str | None = None,
-        schema: str | None = None,
+        schema: dict | None = None,
     ):
         self.host = host
         self.model = model
@@ -34,5 +34,7 @@ class Client:
         response = self.client.chat(
             model=self.model, messages=self.messages, think=False, format=self.schema
         )
-        self.messages.append(response.message)
+        self.messages.append(
+            {"role": response.message["role"], "content": response.message["content"]}
+        )
         return response

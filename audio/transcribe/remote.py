@@ -22,3 +22,10 @@ class RemoteTranscriber(BaseTranscriber):
             return response.json()["text"]
         except Exception as e:
             raise TranscribeError from e
+
+    def warmup(self):
+        try:
+            response = requests.post(self._endpoint + "/warmup")
+            response.raise_for_status()
+        except Exception as e:
+            raise TranscribeError from e

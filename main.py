@@ -181,6 +181,7 @@ def main():
             args.whisper_beam_size,
             args.whisper_language,
         )
+        transcriber.warmup()
     else:
         from audio.transcribe.local import LocalTranscriber
 

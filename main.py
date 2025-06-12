@@ -29,7 +29,9 @@ def run_chat(client: chat.Client, message_queue: Queue[str], talk_queue: Queue):
         talk_queue.put(content)
 
 
-def run_voice(voicevox: VOICEVOX, styles, talk_queue: Queue, mute_queue: Queue):
+def run_voice_synthesis(
+    voicevox: VOICEVOX, styles, talk_queue: Queue, voice_play_queue: Queue
+):
     while True:
         content = talk_queue.get()
         tone = content["tone"]
@@ -44,9 +46,7 @@ def run_voice(voicevox: VOICEVOX, styles, talk_queue: Queue, mute_queue: Queue):
             query = voicevox.audio_query(speaker, content["content"])
         with log_duration.info("synthesis"):
             voice_wav = voicevox.synthesis(speaker, query)
-        mute_queue.put("mute")
-        play_wav(voice_wav)
-        mute_queue.put("unmute")
+        voice_play_queue.put(voice_wav)
 
 
 def vad(vad_mode: int, device_id: int, audio_queue: Queue[np.typing.NDArray]):
@@ -116,8 +116,8 @@ def main():
 
     audio_queue: Queue[np.typing.NDArray] = Queue()
     message_queue: Queue[str] = Queue()
-    voice_queue: Queue = Queue()
-    mute_queue: Queue = Queue()
+    talk_quele: Queue = Queue()
+    voice_play_queue: Queue = Queue()
 
     voicevox = VOICEVOX(args.voicevox_endpoint)
     speakers: list = json.loads(voicevox.speakers())
@@ -180,13 +180,13 @@ def main():
     threading.Thread(
         target=run_chat,
         daemon=True,
-        args=(client, message_queue, voice_queue),
+        args=(client, message_queue, talk_quele),
     ).start()
 
     threading.Thread(
-        target=run_voice,
+        target=run_voice_synthesis,
         daemon=True,
-        args=(voicevox, styles, voice_queue, mute_queue),
+        args=(voicevox, styles, talk_quele, voice_play_queue),
     ).start()
 
     threading.Thread(
@@ -201,13 +201,18 @@ def main():
         stream.start()
         logger.info("start listening...")
         while True:
-            msg = mute_queue.get(timeout=1000)
-            if msg == "mute":
+            try:
+                voice = voice_play_queue.get(timeout=1000)
                 stream.stop()
-            elif msg == "unmute":
+                play_wav(voice)
                 stream.start()
+            except TimeoutError:
+                pass
 
-    threading.Thread(target=audio_thread, daemon=True)
+    threading.Thread(
+        target=audio_thread,
+        daemon=True,
+    ).start()
 
     try:
         while True:
